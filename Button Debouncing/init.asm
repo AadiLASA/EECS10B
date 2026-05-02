@@ -5,6 +5,31 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+; Description:      This program tests the sensor functions forHomework #2.
+;                   It sets up the stack and calls the homework test function.
+;
+; Input:            User presses of the switches (sensors) are stored in
+;                   memory.
+; Output:           None.
+;
+; User Interface:   No real user interface.  The user inputs switch presses
+;                   and that data along with the status function output is
+;                   written to memory.
+; Error Handling:   None.
+;
+; Algorithms:       None.
+; Data Structures:  None.
+;
+; Known Bugs:       None.
+; Limitations:      Only the last (at least) 128 switch inputs are stored.
+;
+; Revision History:
+;    4/30/26  Aaditya Bhat		added init functions
+;    5/02/26  Aaditya Bhat		added commenting
+
+
+
 .cseg
 
 ; InitPorts

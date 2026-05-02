@@ -5,6 +5,28 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Description:      This file implements the matrix scanning and debouncing routines
+;                   for the 5x8 sensor matrix. It includes the Timer 0 ISR, which
+;                   scans the matrix, detects key presses, and debounces the input.
+;
+; Input:            Raw key presses from the 5x8 sensor matrix.
+; Output:           Debounced key codes stored in shared memory.
+;
+; User Interface:   None.
+;
+; Error Handling:   None.
+;
+; Algorithms:       Matrix scanning, state machine for debouncing.
+; Data Structures:  None.
+;
+; Known Bugs:       None.
+; Limitations:      Supports only a 5x8 sensor matrix.
+;
+; Revision History:
+;    4/30/26   Aaditya Bhat              added Timer0_ISR, state machine, and debouncing logic
+;	 5/02/26   Aaditya Bhat				 added commenting/documentation
+
+
 .dseg
 ; --- Shared Variables in SRAM ---
 SensorFlag:     .BYTE 1         ; Set to 1 when a valid, debounced key is ready
