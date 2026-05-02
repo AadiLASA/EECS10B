@@ -36,16 +36,14 @@
 ; Last Modified:     May 2, 2026
 InitPorts:
 	;Set the lower pins of ROW_PORT to outputs (0001 1111)
-	LDI R16, $1F
-	OUT ROW_DDR, R16
-
+	LDI 	R16, $1F
+	OUT 	ROW_DDR, R16
 	;Set all pins of COL_PORT to inputs
-	LDI R16, $00
-	OUT  COL_DDR, R16
-
+	LDI 	R16, $00
+	OUT  	COL_DDR, R16
 	;Enable the internal pull-up resistors on the column inputs
-	LDI R16, $FF
-	OUT COL_PORT, R16
+	LDI 	R16, $FF
+	OUT 	COL_PORT, R16
 
 	RET
 
@@ -79,16 +77,16 @@ InitPorts:
 ; Last Modified:     May 2, 2026
 InitTimer0:
 	;Set the timer to CTC Mode
-	LDI R16, (1 << WGM01)
-	OUT TCCR0, R16
+	LDI 	R16, (1 << WGM01)
+	OUT 	TCCR0, R16
 
 	;Set the compare match value
-	LDI R16, $7C
-	OUT OCR0, R16
+	LDI 	R16, $7C
+	OUT 	OCR0, R16
 
 	;Enable the Timer0 Match Interrupt
-	LDI R16, (1 << OCIE0)
-	OUT TIMSK, R16
+	LDI 	R16, (1 << OCIE0)
+	OUT 	TIMSK, R16
 
 	;Start the timer (Prescalar = 64)
 	LDI     R16, (1 << WGM01) | (1 << CS02) 
@@ -125,9 +123,9 @@ InitTimer0:
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 2, 2026
 InitVariables:
-        CLR     R16
-        STS     SensorFlag, R16
-        STS     SensorState, R16
-        STS     DebounceCnt, R16
-        STS     SensorCode, R16
-        RET
+    CLR     R16
+    STS     SensorFlag, R16
+    STS     SensorState, R16
+    STS     DebounceCnt, R16
+    STS     SensorCode, R16
+    RET
