@@ -27,12 +27,12 @@
 ; Revision History:
 ;    5/17/19  Glen George               initial revision
 ;    4/30/25  Glen George               changed function calls to match the
-;                                          pinball machine controller board
+;                                       pinball machine controller board
 ;    4/30/25  Glen George               updated comments
 ;    4/28/26  Glen George               updated comments
-;    4/30/26  Aaditya Bhat				added init function
-;										updated vector table
-;										added includes
+;    4/30/26  Aaditya Bhat		added init function
+;					updated vector table
+;					added includes
 
 
 
