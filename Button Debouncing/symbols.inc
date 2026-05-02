@@ -5,8 +5,8 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Description:      This file defines symbolic constants and hardware-specific
-;                   configurations for the 5x8 sensor matrix. It includes port
+; Description:      This file defines constants and hardware-specific
+;                   configs for the 5x8 sensor matrix. It includes port
 ;                   definitions, debounce timing, and state machine states.
 ;
 ; Input:            None.
