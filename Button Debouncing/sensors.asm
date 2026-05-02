@@ -69,9 +69,12 @@ CurrentRaw:     .BYTE 1         ; The raw key ID currently being debounced
 ; Last Modified:     May 2, 2026            Z flag is set (Z=1/Equal) if no sensor is available.
 
 HaveSensor:
-	LDS 	R16, SensorFlag
-	TST 	R16
+	LDS 	R16, SensorFlag		;get the sensor flag
+	TST 	R16					;set Z flag corresponding to sensor flag
 	RET
+
+
+
 
 ; GetSensor
 ;
@@ -103,13 +106,16 @@ HaveSensor:
 GetSensor:
 GS_Wait:
 	RCALL 	HaveSensor
-	BREQ 	GS_Wait ;Loop if Z=0 implies No Sensor Flag
+	BREQ 	GS_Wait 			;Loop if Z=0 implies No Sensor Flag
 
 	;If no branch, sensor is ready
-	LDS 	R16, SensorCode
-	LDI 	R17, 0
-	STS 	SensorFlag, R17 ;clear the flag, acknowledge reading
+	LDS 	R16, SensorCode 	;Get SensorCode
+	LDI 	R17, 0			
+	STS 	SensorFlag, R17 	;clear the flag, acknowledge reading
 	RET
+
+
+
 
 ; Timer0_ISR
 ;
@@ -141,7 +147,7 @@ GS_Wait:
 ; Last Modified:     May 2, 2026
 
 Timer0_ISR:
-	;Save Context
+	;Save Context by Pushing Changed Regs to Stack
 	PUSH 	R16
 	IN 		R16, SREG
 	PUSH 	R16
@@ -151,9 +157,12 @@ Timer0_ISR:
 	PUSH 	R20
 
 	;Setup Matrix Scanning
-	LDI 	R16, $FE ;Row 0 Active LOW (1111 1110)
-	LDI 	R17, 0   ;Tracking BaseID for cur row
-	LDI 	R18, $FF ;R18 defaults to 0xFF (No key pressed)
+	LDI 	R16, $FE 		;Row 0 Active LOW (1111 1110)
+	LDI 	R17, 0   		;Tracking BaseID for cur row
+	LDI 	R18, $FF 		;R18 defaults to 0xFF (No key pressed)
+
+
+
 
 ; ScanLoop
 ;
@@ -184,18 +193,21 @@ Timer0_ISR:
 ; Last Modified:     May 2, 2026
 
 ScanLoop:
-	OUT 	ROW_PORT, R16 ; Drive selected ROW Low
+	OUT 	ROW_PORT, R16	; Drive selected ROW Low
 	NOP
 	NOP
 
-	IN 		R19, COL_PIN ; read 8 columns	
-	COM 	R19 ; invert bits => pressed keys = 1
+	IN 		R19, COL_PIN	; Read 8 columns	
+	COM 	R19 			; Invert bits => pressed keys = 1
 
 	TST 	R19
-	BREQ 	NextRow ;IF R19 was empty, just go to next row (no presses)
+	BREQ 	NextRow 		; If R19 was empty, just go to next row (no presses)
 
-	LDI 	R20, 0   ;R20 is col counter
+	LDI 	R20, 0  		; R20 is col counter
 	
+
+
+
 ; FindCol
 ;
 ; Description:       Identifies the column of the pressed key in the current row.
@@ -225,11 +237,14 @@ ScanLoop:
 ; Last Modified:     May 2, 2026
 
 FindCol:
-	SBRC 	R19, 0; Skip if BIT 0 is clear
-	RJMP 	FoundPress
-	INC 	R20
-	LSR 	R19
-	RJMP 	FindCol
+	SBRC 	R19, 0			; Skip if BIT 0 is clear
+	RJMP 	FoundPress		; Executes if BIT not clear
+	INC 	R20				; Col+=1
+	LSR 	R19				; Shift to check next bit
+	RJMP 	FindCol			; Recall function
+
+
+
 
 ; FoundPress
 ;
@@ -260,10 +275,13 @@ FindCol:
 ; Last Modified:     May 2, 2026
 	
 FoundPress:
-        ; Calculate the exact button ID (0 to 39)
+    ; Calculate the exact button ID (0 to 39)
     MOV     R18, R17        
     ADD     R18, R20        
     RJMP    ScanDone        ; Stop scanning. Handle one key at a time.
+
+
+
 
 ; NextRow
 ;
@@ -295,11 +313,14 @@ FoundPress:
 
 NextRow:
 	;Find ButtonID
-	SUBI 	R17,-8 ;Add 8 to ROW ID
-	SEC
-	ROL 	R16 ;since carry set, 1101 => 1011 => 0111 etc   
-	CPI 	R17, 40 ;checked all 5 rows?
-	BRNE 	ScanLoop
+	SUBI 	R17,-8 		;Add 8 to ROW ID
+	SEC					;set carry flag
+	ROL 	R16 		;since carry set, 1101 => 1011 => 0111 etc   
+	CPI 	R17, 40 	;checked all 5 rows?
+	BRNE 	ScanLoop    ;jump if not done, continue if done
+
+
+
 
 ; ScanDone
 ;
@@ -332,12 +353,14 @@ ScanDone:
 	;Debouncing StateMachine
 	LDS 	R16, SensorState
 	CPI 	R16, STATE_IDLE
-	BREQ 	Handle_Idle
+	BREQ 	Handle_Idle					;jump to idle state execution if in idle state
 	CPI 	R16, STATE_DEBOUNCE
-    BREQ 	Handle_Debounce
+    BREQ 	Handle_Debounce				;jump to debounce state execution if in debounce state
     CPI 	R16, STATE_WAIT_RELEASE
-    BREQ 	Handle_WaitRelease
-    RJMP 	ISR_End
+    BREQ 	Handle_WaitRelease          ;jump to wait release state if waiting for release
+    RJMP 	ISR_End						;otherwise end interrupt service routine
+
+
 
 
 ; Handle_Idle
@@ -371,12 +394,14 @@ Handle_Idle:
 	CPI 	R18, $FF
 	BREQ 	ISR_End ;Nothing pressed
 	
-	STS 	CurrentRaw, R18
+	STS 	CurrentRaw, R18			;deposit key id
 	LDI 	R16, STATE_DEBOUNCE
-	STS 	SensorState, R16
+	STS 	SensorState, R16		;prepare debounce state
 	LDI 	R16, 0
-	STS 	DebounceCnt, R16
-	RJMP 	ISR_End	
+	STS 	DebounceCnt, R16		;prep counter
+	RJMP 	ISR_End					;end current interrupt SR
+
+
 
 
 ; Handle_Debounce
@@ -409,29 +434,32 @@ Handle_Idle:
 
 Handle_Debounce:
 	CPI 	R18, $FF
-	BREQ 	Reset_To_Idle ;key pressed early
+	BREQ 	Reset_To_Idle 			;key pressed early
 
 	LDS 	R16, CurrentRaw
 	CP 		R18,R16
-	BRNE 	Reset_To_Idle ;switched keys early
+	BRNE 	Reset_To_Idle 			;switched keys early
 
 	;Valid Continuous Press (neither above cases happened)
 	LDS 	R16, DebounceCnt
-	INC 	R16
-	STS 	DebounceCnt,R16
-	CPI 	R16, DEBOUNCE_TIME
-	BRNE 	SR_End ;Not Fully debounced
+	INC 	R16						;since valid press, increment the count
+	STS 	DebounceCnt,R16     	;deposit updated count to memory
+	CPI 	R16, DEBOUNCE_TIME  	;determine if our debouncecount has reached threshold
+	BRNE 	ISR_End 				;not Fully debounced, just end
 	
 	;Debounced Time Reached
-	LDI 	R16, STATE_WAIT_RELEASE
-	STS 	SensorState, R16
+	LDI 	R16, STATE_WAIT_RELEASE	;prepare sensor for release
+	STS 	SensorState, R16		;save state
 
-	LDS 	R16, CurrentRaw
-	STS 	SensorCode, R16
+	LDS 	R16, CurrentRaw			
+	STS 	SensorCode, R16			;update valid sensor code
 
 	LDI 	R16, $01
-	STS 	SensorFlag, R16
-	RJMP 	ISR_End
+	STS 	SensorFlag, R16			;update sensor flag (button has successfully debounced)
+	RJMP 	ISR_End					;end routine
+
+
+
 
 ; Reset_To_Idle
 ;
@@ -461,9 +489,12 @@ Handle_Debounce:
 ; Last Modified:     May 2, 2026
 
 Reset_To_Idle:
-	LDI     R16, STATE_IDLE
-    STS     SensorState, R16
-    RJMP    ISR_End
+	LDI     R16, STATE_IDLE		;prepare idle state
+    STS     SensorState, R16	;set idle state
+    RJMP    ISR_End				;end interrupt routine
+
+
+
 
 ; Handle_WaitRelease
 ;
@@ -493,13 +524,16 @@ Reset_To_Idle:
 ; Last Modified:     May 2, 2026
 
 Handle_WaitRelease:
-	CPI 	R18, $FF
-	BRNE 	ISR_End  ;user still holding key
+	CPI 	R18, $FF 			;is there still user input from any sensor?
+	BRNE 	ISR_End  			;branch if user still holding key
 
 	;User Let Go - back to idle
-	LDI 	R16, STATE_IDLE
-	STS 	SensorState, R16
-	RJMP 	ISR_END
+	LDI 	R16, STATE_IDLE 	;prepare idle state
+	STS 	SensorState, R16 	;set idle state
+	RJMP 	ISR_END 			;end routine
+
+
+
 
 ; ISR_END
 ;
@@ -529,7 +563,7 @@ Handle_WaitRelease:
 ; Last Modified:     May 2, 2026
 
 ISR_END:
-	;Restore Context
+	;Restore Context from earlier deposit, reverse order (stack LIFO)
     POP     R20
     POP     R19
     POP     R18
@@ -538,4 +572,3 @@ ISR_END:
     OUT     SREG, R16       
     POP     R16
     RETI
-

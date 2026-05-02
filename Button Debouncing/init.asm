@@ -101,22 +101,18 @@ InitPorts:
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 2, 2026
 InitTimer0:
-	;Set the timer to CTC Mode
 	LDI 	R16, (1 << WGM01)
-	OUT 	TCCR0, R16
+	OUT 	TCCR0, R16						;Set the timer to CTC Mode
 
-	;Set the compare match value
 	LDI 	R16, $7C
-	OUT 	OCR0, R16
+	OUT 	OCR0, R16						;Set the compare match value (124 ct)
 
-	;Enable the Timer0 Match Interrupt
 	LDI 	R16, (1 << OCIE0)
-	OUT 	TIMSK, R16
+	OUT 	TIMSK, R16						;Enable the Timer0 Match Interrupt
 
-	;Start the timer (Prescalar = 64)
 	LDI     R16, (1 << WGM01) | (1 << CS02) 
-    OUT     TCCR0, R16
-	SEI
+    OUT     TCCR0, R16						;Start the timer (Prescalar = 64)
+	SEI									    ;Ensure interrupt enable
         
     RET
 
@@ -148,8 +144,9 @@ InitTimer0:
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 2, 2026
 InitVariables:
-    CLR     R16
-    STS     SensorFlag, R16
+    CLR     R16                 ;Rd <- 0
+								;Init vals with cleared register
+    STS     SensorFlag, R16    
     STS     SensorState, R16
     STS     DebounceCnt, R16
     STS     SensorCode, R16
