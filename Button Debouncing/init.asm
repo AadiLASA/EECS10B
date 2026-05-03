@@ -62,11 +62,11 @@
 InitPorts:
 	;Set the lower pins of ROW_PORT to outputs (0001 1111)
 	LDI 	R16, ROW_DIR_INIT
-	OUT 	ROW_DDR, R16
+	STS 	ROW_DDR, R16
 	;Set all pins of COL_PORT to inputs
 	LDI 	R16, COL_DIR_INIT
 	OUT  	COL_DDR, R16
-	;Enable the internal pull-up resistors on the column inputs
+	;Drive the internal pull-up resistors on the column inputs
 	LDI 	R16, COL_PULLUP_EN
 	OUT 	COL_PORT, R16
 

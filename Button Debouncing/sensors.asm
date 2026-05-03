@@ -193,8 +193,8 @@ Timer0_ISR:
 ; Last Modified:     May 2, 2026
 
 ScanLoop:
-	OUT 	ROW_PORT, R16	; Drive selected ROW Low
-	NOP
+	STS 	ROW_PORT, R16	; Drive selected ROW Low
+	NOP						; Weird timing-related issue on board, NOP for safety
 	NOP
 
 	IN 		R19, COL_PIN	; Read 8 columns	
