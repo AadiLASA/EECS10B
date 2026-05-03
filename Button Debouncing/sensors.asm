@@ -110,7 +110,7 @@ GS_Wait:
 
 	;If no branch, sensor is ready
 	LDS 	R16, SensorCode 	;Get SensorCode
-	LDI 	R17, 0			
+	LDI 	R17, FLAG_CLEARED			
 	STS 	SensorFlag, R17 	;clear the flag, acknowledge reading
 	RET
 
@@ -157,9 +157,9 @@ Timer0_ISR:
 	PUSH 	R20
 
 	;Setup Matrix Scanning
-	LDI 	R16, $FE 		;Row 0 Active LOW (1111 1110)
-	LDI 	R17, 0   		;Tracking BaseID for cur row
-	LDI 	R18, $FF 		;R18 defaults to 0xFF (No key pressed)
+	LDI 	R16, ROW_0_ACTIVE 		;Row 0 Active LOW (1111 1110)
+	LDI 	R17, INITIAL_BASEID   	;Tracking BaseID for cur row
+	LDI 	R18, NO_KEY_PRESSED 	;R18 defaults to 0xFF (No key pressed)
 
 
 
@@ -313,11 +313,11 @@ FoundPress:
 
 NextRow:
 	;Find ButtonID
-	SUBI 	R17,-8 		;Add 8 to ROW ID
-	SEC					;set carry flag
-	ROL 	R16 		;since carry set, 1101 => 1011 => 0111 etc   
-	CPI 	R17, 40 	;checked all 5 rows?
-	BRNE 	ScanLoop    ;jump if not done, continue if done
+	SUBI 	R17,-COLS_PER_ROW 	;Add 8 to ROW ID
+	SEC							;set carry flag
+	ROL 	R16 				;since carry set, 1101 => 1011 => 0111 etc   
+	CPI 	R17, TOTAL_SENSORS 	;checked all 5 rows?
+	BRNE 	ScanLoop    		;jump if not done, continue if done
 
 
 
@@ -391,13 +391,13 @@ ScanDone:
 ; Last Modified:     May 2, 2026
 
 Handle_Idle:
-	CPI 	R18, $FF
+	CPI 	R18, NO_KEY_PRESSED
 	BREQ 	ISR_End ;Nothing pressed
 	
 	STS 	CurrentRaw, R18			;deposit key id
 	LDI 	R16, STATE_DEBOUNCE
 	STS 	SensorState, R16		;prepare debounce state
-	LDI 	R16, 0
+	LDI 	R16, FLAG_CLEARED
 	STS 	DebounceCnt, R16		;prep counter
 	RJMP 	ISR_End					;end current interrupt SR
 
@@ -433,7 +433,7 @@ Handle_Idle:
 ; Last Modified:     May 2, 2026
 
 Handle_Debounce:
-	CPI 	R18, $FF
+	CPI 	R18, NO_KEY_PRESSED
 	BREQ 	Reset_To_Idle 			;key pressed early
 
 	LDS 	R16, CurrentRaw
@@ -524,7 +524,7 @@ Reset_To_Idle:
 ; Last Modified:     May 2, 2026
 
 Handle_WaitRelease:
-	CPI 	R18, $FF 			;is there still user input from any sensor?
+	CPI 	R18, NO_KEY_PRESSED ;is there still user input from any sensor?
 	BRNE 	ISR_End  			;branch if user still holding key
 
 	;User Let Go - back to idle

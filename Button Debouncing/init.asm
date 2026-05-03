@@ -61,13 +61,13 @@
 ; Last Modified:     May 2, 2026
 InitPorts:
 	;Set the lower pins of ROW_PORT to outputs (0001 1111)
-	LDI 	R16, $1F
+	LDI 	R16, ROW_DIR_INIT
 	OUT 	ROW_DDR, R16
 	;Set all pins of COL_PORT to inputs
-	LDI 	R16, $00
+	LDI 	R16, COL_DIR_INIT
 	OUT  	COL_DDR, R16
 	;Enable the internal pull-up resistors on the column inputs
-	LDI 	R16, $FF
+	LDI 	R16, COL_PULLUP_EN
 	OUT 	COL_PORT, R16
 
 	RET
@@ -104,7 +104,7 @@ InitTimer0:
 	LDI 	R16, (1 << WGM01)
 	OUT 	TCCR0, R16						;Set the timer to CTC Mode
 
-	LDI 	R16, $7C
+	LDI 	R16, T0_COMP_MATCH
 	OUT 	OCR0, R16						;Set the compare match value (124 ct)
 
 	LDI 	R16, (1 << OCIE0)
