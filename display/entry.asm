@@ -1,11 +1,30 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                            ;
+;                                   HW3TEST                                  ;
+;                            Homework #3 Test Code                           ;
+;                                  EE/CS 10b                                 ;
+;                                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
-;set the device
-;.device  ATMEGA64
-
-
+; Description:      This file contains the entry point for Homework #3. It
+;                   sets up the stack, initializes the hardware, and calls
+;                   the test functions.
+;
+; Input:            None.
+; Output:           None.
+;
+; User Interface:   None.
+; Error Handling:   None.
+;
+; Algorithms:       None.
+; Data Structures:  None.
+;
+; Known Bugs:       None.
+; Limitations:      None.
+;
+; Revision History:
+;    5/16/26  Aaditya Bhat               initial revision
+;    5/18/26  Aaditya Bhat               updated comments
 
 
 ;get the definitions for the device
@@ -15,13 +34,7 @@
 .include "vars.inc"
 
 
-
-
-
 .cseg
-
-
-
 
 ;setup the vector area
 
@@ -43,7 +56,7 @@
         JMP     PC                      ;timer 1 compare match B
         JMP     PC                      ;timer 1 overflow
         JMP     Timer0_ISR              ;timer 0 compare match
-        JMP     Timer0_ISR                      ;timer 0 overflow
+        JMP     Timer0_ISR              ;timer 0 overflow
         JMP     PC                      ;SPI transfer complete
         JMP     PC                      ;UART 0 Rx complete
         JMP     PC                      ;UART 0 Tx empty
@@ -62,8 +75,6 @@
         JMP     PC                      ;UART 1 Tx complete
         JMP     PC                      ;Two-wire serial interface
         JMP     PC                      ;store program memory ready
-
-
 
 
 ; start of the actual program
@@ -85,21 +96,13 @@ Start:                                  ;start the CPU after a reset
         RJMP    Start                   ;shouldn't return, but if it does, restart
 
 
-
-
 .dseg
-
-
 
 ; the stack - 128 bytes
                 .BYTE   127
 TopOfStack:     .BYTE   1               ;top of the stack
 
-
-
-
 ; since don't have a linker, include all the .asm files
-
 .include "display.asm"
 .include "hardware.asm"
 .include "hw3test.asm"

@@ -24,7 +24,6 @@
 
 ;get the definitions for the device
 ;.include  "m64def.inc"
-.include "vars.inc"
 ; local include files
 ;    none
 

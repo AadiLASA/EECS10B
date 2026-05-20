@@ -1,6 +1,32 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; main.asm
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                            ;
+;                                   HW3TEST                                  ;
+;                            Homework #3 Test Code                           ;
+;                                  EE/CS 10b                                 ;
+;                                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Description:      This file contains the main functions for Homework #3.
+;                   It includes functions to clear the display buffers and
+;                   display hexadecimal numbers and LED patterns.
+;
+; Input:            None.
+; Output:           Updates the display buffers and LED matrix.
+;
+; User Interface:   None.
+; Error Handling:   None.
+;
+; Algorithms:       Buffer clearing, nibble extraction, and bit manipulation.
+; Data Structures:  None.
+;
+; Known Bugs:       None.
+; Limitations:      None.
+;
+; Revision History:
+;    5/16/26  Aaditya Bhat               initial revision
+;    5/18/26  Aaditya Bhat               revised port a output directionality (was inverted)
+;    5/18/26  Aaditya Bhat               updated comments
+
 .cseg
 
 ; ClearDisplay
@@ -31,15 +57,15 @@
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 16, 2026
 ClearDisplay:
-    push    r16
+    push    r16                         ;save registers
     push    r17
     push    r30
     push    r31
 
-    ldi     r30, low(DigitBuffer)
+    ldi     r30, low(DigitBuffer)       ;load digit buffer base address
     ldi     r31, high(DigitBuffer)
-    ldi     r17, NUM_DIGITS
-    clr     r16
+    ldi     r17, NUM_DIGITS             ;set loop counter to num of digits
+    clr     r16                         ;clear for zero writing
 
 ; ClearDigitsLoop
 ;
@@ -68,13 +94,13 @@ ClearDisplay:
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 16, 2026
 ClearDigitsLoop:
-    st      Z+, r16
-    dec     r17
-    brne    ClearDigitsLoop
+    st      Z+, r16                    ;store zero at cur address and inc Z
+    dec     r17                        ;dec loop counter
+    brne    ClearDigitsLoop            ;repeat till light bytes are cleared
 
-    ldi     r30, low(LightBuffer)
+    ldi     r30, low(LightBuffer)      ;load lightbuf base addr into z
     ldi     r31, high(LightBuffer)
-    ldi     r17, LIGHT_BYTES
+    ldi     r17, LIGHT_BYTES           ;set loop counter to num light bytes
 
 ; ClearLightsLoop
 ;
@@ -103,11 +129,11 @@ ClearDigitsLoop:
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 16, 2026
 ClearLightsLoop:
-    st      Z+, r16
-    dec     r17
-    brne    ClearLightsLoop
+    st      Z+, r16                     ;store zero at cur address
+    dec     r17                         ;decrement loop counter
+    brne    ClearLightsLoop             ;repeat until ;ight bytes clearaed
 
-    pop     r31
+    pop     r31                         ;restore regs
     pop     r30
     pop     r17
     pop     r16
@@ -142,13 +168,14 @@ ClearLightsLoop:
 ;
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 16, 2026
+; DisplayHex
 DisplayHex:
-    cpi     r18, PLAYER_MIN
+    cpi     r18, PLAYER_MIN                     ;check if player num is valid (>=min)
     brlo    EndDisplayHex      
-    cpi     r18, PLAYER_MAX + 1
+    cpi     r18, PLAYER_MAX + 1                 ;check if player num is valid (<=max)
     brsh    EndDisplayHex
-
-    push    r16
+                                                ;otherwise skip function
+    push    r16                                 ;save regs
     push    r17
     push    r18
     push    r19
@@ -157,50 +184,55 @@ DisplayHex:
     push    r30
     push    r31
 
-    clr     r21
+    clr     r21                                 ;clear to prep carry in address calculations
 
-    ; Calculate array offset: (player - 1) * 4
-    dec     r18
+    ;calculate array offset: (player - 1) * 4
+    dec     r18                                 ;dec player num
     lsl     r18
-    lsl     r18
-    ldi     r30, low(DigitBuffer)
+    lsl     r18                                 ;multi by 2 twice = *4
+    
+    ldi     r30, low(DigitBuffer)               ;load digitbuffer base address
     ldi     r31, high(DigitBuffer)
-    add     r30, r18
+    add     r30, r18                            ;add offset to Z
     adc     r31, r21
 
+    
+    ;Z+0 rightmost digit-> low nibble of R16
+    mov     r19, r16                            
+    andi    r19, NIBBLE_MASK                    ;mask low nibble from R16
+    rcall   GetSegCode                          ;get the 7seg code
+    st      Z+, r20                             ;store and incZ
+
+    ;Z+1: high nibble of r16
+    mov     r19, r16                            
+    swap    r19                                 ;swap nibbles
+    andi    r19, NIBBLE_MASK                    ;mask low (prev high)
+    rcall   GetSegCode                          ;get the 7 seg code
+    st      Z+, r20                             ;store and incz
+
+    ;Z+2 low nibble of R17
+    mov     r19, r17                            ;now repeat above process r17/r19
+    andi    r19, NIBBLE_MASK
+    rcall   GetSegCode
+    st      Z+, r20
+
+    ;Z+3 leftmost digit -> high nibble of R17
     mov     r19, r17
     swap    r19
     andi    r19, NIBBLE_MASK
     rcall   GetSegCode
-    st      Z+, r20
+    st      Z, r20                              ;last store, no increment needed
 
-    mov     r19, r17
-    andi    r19, NIBBLE_MASK
-    rcall   GetSegCode
-    st      Z+, r20
-
-    mov     r19, r16
-    swap    r19
-    andi    r19, NIBBLE_MASK
-    rcall   GetSegCode
-    st      Z+, r20
-
-    mov     r19, r16
-    andi    r19, NIBBLE_MASK
-    rcall   GetSegCode
-    st      Z, r20
-
-    pop     r31
-    pop     r30
+EndDisplayHex:
+    pop     r31                                 ;restore regs
+    pop     r30 
     pop     r21
     pop     r20
     pop     r19
     pop     r18
     pop     r17
     pop     r16
-EndDisplayHex:
     ret
-
 
 ; DisplayLight
 ;
@@ -229,162 +261,68 @@ EndDisplayHex:
 ;
 ; Author:            Aaditya Bhat
 ; Last Modified:     May 16, 2026
+; DisplayLight
 DisplayLight:
     cpi     r16, NUM_LIGHTS
-    brsh    EndDisplayLight    
+    brsh    EndDisplayLight             ;ensure not done with light cycle loop
 
-    push r16
-    push r17
-    push r18
-    push r19
-    push r21
-    push r30
-    push r31
-
+    push    r16                         ;store register contents
+    push    r17
+    push    r18
+    push    r19
+    push    r21
+    push    r30
+    push    r31
     clr     r21
 
-    ; Calculate byte index: l / 8
+    ;calculate byte index: (l / 8)
     mov     r18, r16
     lsr     r18
     lsr     r18
-    lsr     r18
-    ldi     r30, low(LightBuffer)
+    lsr     r18                         ;div r16 contents by 8 (2**3)
+
+    ;if row is 0-7, subtract from 7. if 8-15, subtract from 23 to flip the block.
+    cpi     r18, STATE_BOT_START
+    brsh    BottomGridRow
+TopGridRow:
+    ldi     r19, TOP_ROW_MAX            ;load max row idnex
+    sub     r19, r18
+    mov     r18, r19                    ;flip and store index
+    rjmp    GetAddress
+BottomGridRow:
+    ldi     r19, BOTTOM_ROW_MAX         ;load mx row index for bot grid
+    sub     r19, r18
+    mov     r18, r19                    ;flip and store
+
+GetAddress:
+    ldi     r30, low(LightBuffer)       ;load lightbuffer base address to Z
     ldi     r31, high(LightBuffer)
-    add     r30, r18
+    add     r30, r18                    ;add byte index to Z
     adc     r31, r21
-    ld      r19, Z               
+    ld      r19, Z                      ;load current byte val from buffer
 
-    ; Calculate bit mask: 1 << (l % 8)
-    andi    r16, BIT_MOD_MASK          
-    ldi     r18, BIT_START_VAL
-
-; BitLoop
-;
-; Description:       Calculates the bit mask for a specific light index.
-;
-; Operation:         Shifts a bit mask left until the desired bit position is reached.
-;
-; Arguments:         R16 = bit position (0-7)
-; Return Value:      R18 = bit mask
-;
-; Local Variables:   R16, R18
-; Shared Variables:  None.
-; Global Variables:  None.
-;
-; Input:             Bit position.
-; Output:            Bit mask for the specified position.
-;
-; Error Handling:    None.
-;
-; Algorithms:        Bit shifting.
-; Data Structures:   None.
-;
-; Registers Changed: R16, R18
-; Stack Depth:       2 bytes
-;
-; Author:            Aaditya Bhat
-; Last Modified:     May 16, 2026
+    andi    r16, BIT_MOD_MASK           ;modulo 8
+    ldi     r18, BIT_START_MASK         ;start mask at 10000000 (Bit 7)
 BitLoop:
-    tst     r16
-    breq    BitDone
-    lsl     r18
-    dec     r16
-    rjmp    BitLoop
+    tst     r16                         ;check if bitpos is zero
+    breq    BitDone                     ;exit the loop if true
+    lsr     r18                         ;shift the mask left
+    dec     r16                         ;decrement the bit pos
+    rjmp    BitLoop                     ;now just repeat until bit pos IS zero
 BitDone:
     
-    tst     r17
-    breq    ClearLightBit
-
-; SetLightBit
-;
-; Description:       Sets a specific bit in the LightBuffer to turn on a light.
-;
-; Operation:         Performs a bitwise OR operation to set the desired bit.
-;
-; Arguments:         R18 = bit mask, R19 = current byte value
-; Return Value:      R19 = updated byte value
-;
-; Local Variables:   R18, R19
-; Shared Variables:  None.
-; Global Variables:  None.
-;
-; Input:             Bit mask and current byte value.
-; Output:            Updated byte value with the bit set.
-;
-; Error Handling:    None.
-;
-; Algorithms:        Bitwise OR.
-; Data Structures:   None.
-;
-; Registers Changed: R18, R19
-; Stack Depth:       2 bytes
-;
-; Author:            Aaditya Bhat
-; Last Modified:     May 16, 2026
+    tst     r17                         ;check if state is off or non-zero (on)
+    breq    ClearLightBit               ;if zero, clear bit
 SetLightBit:
-    or      r19, r18             
-    rjmp    WriteLight
-
-; ClearLightBit
-;
-; Description:       Clears a specific bit in the LightBuffer to turn off a light.
-;
-; Operation:         Performs a bitwise AND operation with the complement of the bit mask.
-;
-; Arguments:         R18 = bit mask, R19 = current byte value
-; Return Value:      R19 = updated byte value
-;
-; Local Variables:   R18, R19
-; Shared Variables:  None.
-; Global Variables:  None.
-;
-; Input:             Bit mask and current byte value.
-; Output:            Updated byte value with the bit cleared.
-;
-; Error Handling:    None.
-;
-; Algorithms:        Bitwise AND with complement.
-; Data Structures:   None.
-;
-; Registers Changed: R18, R19
-; Stack Depth:       2 bytes
-;
-; Author:            Aaditya Bhat
-; Last Modified:     May 16, 2026
+    or      r19, r18                    ;set the bit
+    rjmp    WriteLight                  ;write back updated value
 ClearLightBit:
-    com     r18                 
-    and     r19, r18
-
-; WriteLight
-;
-; Description:       Writes the updated byte value back to the LightBuffer.
-;
-; Operation:         Stores the updated byte value into the LightBuffer at the calculated address.
-;
-; Arguments:         R19 = updated byte value, Z = address in LightBuffer
-; Return Value:      None.
-;
-; Local Variables:   R19, Z
-; Shared Variables:  None.
-; Global Variables:  LightBuffer
-;
-; Input:             Updated byte value and address.
-; Output:            Updates the LightBuffer.
-;
-; Error Handling:    None.
-;
-; Algorithms:        None.
-; Data Structures:   None.
-;
-; Registers Changed: None.
-; Stack Depth:       0 bytes
-;
-; Author:            Aaditya Bhat
-; Last Modified:     May 16, 2026
+    com     r18                         ;invert bit mask
+    and     r19, r18                    ;clear the bit
 WriteLight:
-    st      Z, r19
+    st      Z, r19                      ;write the updated byte val to lightbuffer
 
-    pop     r31
+    pop     r31                         ;restore registers
     pop     r30
     pop     r21
     pop     r19
@@ -424,27 +362,16 @@ EndDisplayLight:
 ; Last Modified:     May 16, 2026
 
 GetSegCode:
-    push    ZL
+    push    ZL                              ;save regs
     push    ZH
     push    r21
-    clr     r21
-    ldi     ZL, low(2 * DigitSegTable)
+    clr     r21                             ;clear carry in address calcs reg
+    ldi     ZL, low(2 * DigitSegTable)      ;load segtable base address into Z
     ldi     ZH, high(2 * DigitSegTable)
-    add     ZL, r19
+    add     ZL, r19                         ;add digit index to Z
     adc     ZH, r21
-    lpm     r20, Z
-    pop     r21
+    lpm     r20, Z                          ;load 7seg code from prog memory
+    pop     r21                             ;restore registers
     pop     ZH
     pop     ZL
     ret
-
-; 7-Segment Lookup Table (Common Cathode Standard)
-SegTable:
-    .db 0x3F, 0x06 ; 0, 1
-    .db 0x5B, 0x4F ; 2, 3
-    .db 0x66, 0x6D ; 4, 5
-    .db 0x7D, 0x07 ; 6, 7
-    .db 0x7F, 0x6F ; 8, 9
-    .db 0x77, 0x7C ; A, b
-    .db 0x39, 0x5E ; C, d
-    .db 0x79, 0x71 ; E, F
