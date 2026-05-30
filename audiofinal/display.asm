@@ -238,3 +238,113 @@ GetSegCode:
     pop     ZH
     pop     ZL
     ret
+
+; ClearDisplay
+;
+; Description:       Clears the 7-segment display buffer and LED matrix buffer.
+;
+; Operation:         Iterates through the DigitBuffer and LightBuffer, setting all
+;                    values to zero.
+;
+; Arguments:         None.
+; Return Value:      None.
+;
+; Local Variables:   R16, R17, R30, R31
+; Shared Variables:  None.
+; Global Variables:  DigitBuffer, LightBuffer
+;
+; Input:             None.
+; Output:            Clears the display and light buffers.
+;
+; Error Handling:    None.
+;
+; Algorithms:        None.
+; Data Structures:   None.
+;
+; Registers Changed: R16, R17, R30, R31
+; Stack Depth:       8 bytes
+;
+; Author:            Aaditya Bhat
+; Last Modified:     May 16, 2026
+ClearDisplay:
+    push    r16
+    push    r17
+    push    r30
+    push    r31
+
+    ldi     r30, low(DigitBuffer)
+    ldi     r31, high(DigitBuffer)
+    ldi     r17, NUM_DIGITS
+    clr     r16
+
+; ClearDigitsLoop
+;
+; Description:       Clears the DigitBuffer by setting all bytes to zero.
+;
+; Operation:         Iterates through the DigitBuffer and writes zero to each byte.
+;
+; Arguments:         None.
+; Return Value:      None.
+;
+; Local Variables:   R16, R17, R30, R31
+; Shared Variables:  None.
+; Global Variables:  DigitBuffer
+;
+; Input:             None.
+; Output:            Clears the DigitBuffer.
+;
+; Error Handling:    None.
+;
+; Algorithms:        None.
+; Data Structures:   None.
+;
+; Registers Changed: R16, R17, R30, R31
+; Stack Depth:       4 bytes
+;
+; Author:            Aaditya Bhat
+; Last Modified:     May 16, 2026
+ClearDigitsLoop:
+    st      Z+, r16
+    dec     r17
+    brne    ClearDigitsLoop
+
+    ldi     r30, low(LightBuffer)
+    ldi     r31, high(LightBuffer)
+    ldi     r17, LIGHT_BYTES
+
+; ClearLightsLoop
+;
+; Description:       Clears the LightBuffer by setting all bytes to zero.
+;
+; Operation:         Iterates through the LightBuffer and writes zero to each byte.
+;
+; Arguments:         None.
+; Return Value:      None.
+;
+; Local Variables:   R16, R17, R30, R31
+; Shared Variables:  None.
+; Global Variables:  LightBuffer
+;
+; Input:             None.
+; Output:            Clears the LightBuffer.
+;
+; Error Handling:    None.
+;
+; Algorithms:        None.
+; Data Structures:   None.
+;
+; Registers Changed: R16, R17, R30, R31
+; Stack Depth:       4 bytes
+;
+; Author:            Aaditya Bhat
+; Last Modified:     May 16, 2026
+ClearLightsLoop:
+    st      Z+, r16
+    dec     r17
+    brne    ClearLightsLoop
+
+    pop     r31
+    pop     r30
+    pop     r17
+    pop     r16
+    ret
