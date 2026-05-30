@@ -67,6 +67,7 @@ Start:                                  ;start the CPU after a reset
 		RCALL   InitActuator
         RCALL   InitEEROM
         RCALL   InitSound
+        RCALL   InitHardware
 		SEI
 
 
