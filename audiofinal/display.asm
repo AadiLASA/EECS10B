@@ -223,3 +223,18 @@ DisplayHex:
     pop     r16
 EndDisplayHex:
     ret
+
+GetSegCode:
+    push    ZL
+    push    ZH
+    push    r21
+    clr     r21
+    ldi     ZL, low(2 * DigitSegTable)
+    ldi     ZH, high(2 * DigitSegTable)
+    add     ZL, r19
+    adc     ZH, r21
+    lpm     r20, Z
+    pop     r21
+    pop     ZH
+    pop     ZL
+    ret
